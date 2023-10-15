@@ -50,12 +50,11 @@ async function run() {
       }
     });
 
+   
     app.get('/category/:id', async (req, res) => {
       const categoryId = req.params.id;
-
       try {
         const categoryBlogs = await blogs.find({ category: categoryId }).toArray();
-
         if (categoryBlogs.length > 0) {
           res.json(categoryBlogs);
         } else {
@@ -66,23 +65,22 @@ async function run() {
         res.status(500).json({ error: 'Internal Server Error' });
       }
     });
-
-
-    app.get('/blog/:id', async (req, res) => {
-      const id = req.params.id;
+    
+    app.get('/blogs', async (req, res) => {
       try {
-        const blog = await blogs.findOne({ _id: new ObjectId(id) });
-        if (blog) {
-          res.json(blog);
-        } else {
-          res.status(404).json({ message: 'Post not found' });
-        }
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        const blogArray = await blogs.find().toArray();
+        const paginatedBlogs = blogArray.slice(startIndex, endIndex);
+        res.send(paginatedBlogs);
       } catch (error) {
-        console.error('Error fetching blog post:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.error('Error:', error);
+        res.status(500).send('Internal Server Error');
       }
     });
-
+    
 
     app.get('/blog/:id/related', async (req, res) => {
       const id = req.params.id;
